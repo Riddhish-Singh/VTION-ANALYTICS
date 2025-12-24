@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VTION Login & Hub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+    <style>
+        /* --- OFFICIAL VTION FONTS --- */
+        @font-face { font-family: 'Gotham'; font-style: normal; font-weight: 300; src: url('https://www.vtion.ai/wp-content/uploads/2022/05/Gotham-Light.woff2') format('woff2'); }
+        @font-face { font-family: 'Gotham'; font-style: normal; font-weight: 700; src: url('https://www.vtion.ai/wp-content/uploads/2022/05/Gotham-Bold.woff2') format('woff2'); }
+        @font-face { font-family: 'Gotham Medium'; font-style: normal; font-weight: 500; src: url('https://www.vtion.ai/wp-content/uploads/2022/05/Gotham-Medium.woff2') format('woff2'); }
+
+        :root {
+            --vtion-brand-dark: #0b0e2d; 
+            --vtion-teal: #00B0AF;
+            --vtion-teal-hover: #008f8e;
+            --vtion-gradient: linear-gradient(90deg, rgba(205,43,47,1) 0%, rgba(232,137,123,1) 28%, rgba(0,176,175,1) 70%, rgba(122,118,181,1) 100%);
+            
+            --danger: #ef4444;
+            --success: #2ecc71;
+            --warning: #f1c40f;
+
+            /* Light Mode Variables */
+            --bg-body: #f4f6f9;
+            --bg-sidebar: #0b0e2d;
+            --bg-card: #ffffff;
+            --bg-input: #ffffff;
+            --bg-hover: #f8f9fa;
+            --text-main: #1A1B36;
+            --text-muted: #9B9FA7; 
+            --border-color: #e0e0e0;
+            --shadow-subtle: rgba(0,0,0,0.05);
+            --modal-overlay: rgba(11, 14, 45, 0.7);
+        }
+
+        /* --- DARK MODE --- */
+        [data-theme="dark"] {
+            --bg-body: #050614;
+            --bg-sidebar: #080a22;
+            --bg-card: #121533;
+            --bg-input: #0b0e2d;
+            --bg-hover: #1c2045;
+            --text-main: #ffffff;
+            --text-muted: #aab0c7;
+            --border-color: #2a2d45;
+            --shadow-subtle: rgba(0,0,0,0.4);
+            --modal-overlay: rgba(0, 0, 0, 0.85);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            background-color: var(--bg-body); 
+            display: flex; 
+            min-height: 100vh; 
+            font-family: 'Gotham', sans-serif; 
+            color: var(--text-main);
+            transition: background-color 0.3s, color 0.3s;
+            overflow-x: hidden;
+        }
+
+        /* --- AUTH SCREEN STYLES --- */
+        #auth-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-sidebar);
+            /* Matching VTION wave background */
+            background-image: linear-gradient(to bottom, rgba(11, 14, 45, 0.85), rgba(11, 14, 45, 0.95)), url('https://www.vtion.ai/wp-content/uploads/2022/05/technology-digital-wave-background-copy.webp');
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .login-card {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 10px;
+            width: 400px;
+            max-width: 90%;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            border-top: 5px solid var(--vtion-teal);
+        }
+
+        [data-theme="dark"] .login-card {
+            background: #121533;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-top: 5px solid var(--vtion-teal);
+        }
+
+        .login-logo { width: 150px; margin-bottom: 25px; }
+        .login-header h2 { color: #0b0e2d; margin-bottom: 5px; font-weight: 700; }
+        .login-header p { color: #666; font-size: 14px; margin-bottom: 30px; }
+
+        [data-theme="dark"] .login-header h2 { color: white; }
+        [data-theme="dark"] .login-header p { color: #aaa; }
+
+        .login-input {
+            width: 100%;
+            padding: 14px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-family: 'Gotham', sans-serif;
+            font-size: 14px;
+            background: white;
+            color: #333;
+        }
+
+        [data-theme="dark"] .login-input {
+            background: #0b0e2d;
+            border: 1px solid #444;
+            color: white;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 14px;
+            background: var(--vtion-teal);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn-login:hover { background: var(--vtion-teal-hover); }
+
+        .error-msg {
+            color: var(--danger);
+            font-size: 13px;
+            margin-top: 15px;
+            display: none;
+            background: rgba(239, 68, 68, 0.1);
+            padding: 10px;
+            border-radius: 4px;
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-left: 10px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* --- DASHBOARD WRAPPER --- */
+        #app-dashboard {
+            display: none; /* Hidden by default */
+            width: 100%;
+            min-height: 100vh;
+        }
+
+        /* --- ORIGINAL STYLES FOR DASHBOARD --- */
+        h1, h2, h3, h4, h5, h6, .nav-item, .btn-primary { font-family: 'Gotham Medium', sans-serif; }
+
+        /* --- Sidebar --- */
+        .sidebar { 
+            width: 260px; 
+            background-color: var(--bg-sidebar); 
+            /* Digital Wave Background */
+            background-image: linear-gradient(to bottom, rgba(11, 14, 45, 0.92), rgba(11, 14, 45, 0.98)), url('https://www.vtion.ai/wp-content/uploads/2022/05/technology-digital-wave-background-copy.webp');
+            background-size: cover;
+            background-position: center left;
+            
+            color: #ffffff; 
+            display: flex; 
+            flex-direction: column; 
+            padding: 25px 20px; 
+            position: fixed; 
+            height: 100%; 
+            transition: 0.3s; 
+            z-index: 100; 
+            box-shadow: 4px 0 20px rgba(0,0,0,0.1);
+            border-right: 1px solid var(--border-color);
+        }
+        
+        .logo-container { margin-bottom: 50px; text-align: center; }
+        .logo-img { max-width: 130px; }
+        
+        .nav-item { 
+            display: flex; align-items: center; gap: 15px; padding: 16px 20px; 
+            color: #9B9FA7; text-decoration: none; border-radius: 6px; 
+            margin-bottom: 8px; transition: 0.2s; font-size: 15px; cursor: pointer; 
+        }
+        
+        .nav-item:hover { background-color: rgba(255, 255, 255, 0.05); color: #ffffff; }
+        
+        .nav-item.active { 
+            background-color: rgba(255, 255, 255, 0.1); 
+            color: #ffffff; 
+            border-left: 4px solid var(--vtion-teal); 
+        }
+
+        /* --- Main Content --- */
+        .main-content { margin-left: 260px; flex: 1; padding: 40px; width: 100%; }
+        
+        .brand-line { height: 4px; width: 100%; background: var(--vtion-gradient); position: fixed; top: 0; left: 0; z-index: 999; }
+        
+        .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
+        
+        .header-title h1 { color: var(--text-main); font-size: 28px; font-weight: 700; margin-bottom: 5px; }
+        .header-title p { color: var(--text-muted); }
+        
+        .btn-primary { 
+            background-color: var(--vtion-teal); color: white; padding: 12px 28px; 
+            border: none; border-radius: 5px; font-weight: 500; cursor: pointer; 
+            display: flex; align-items: center; gap: 10px; transition: 0.3s; 
+            box-shadow: 0 4px 10px rgba(0, 176, 175, 0.3); font-size: 14px;
+        }
+        .btn-primary:hover { background-color: var(--vtion-teal-hover); transform: translateY(-1px); }
+
+        /* --- Stats Cards --- */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 25px; margin-bottom: 35px; }
+        
+        .stat-card { 
+            background: var(--bg-card); 
+            padding: 25px; 
+            border-radius: 8px; 
+            box-shadow: 0 5px 20px var(--shadow-subtle); 
+            border-left: 4px solid var(--vtion-brand-dark); 
+            transition: transform 0.2s, background-color 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::after {
+            content: '';
+            position: absolute; top: 0; right: 0; width: 100px; height: 100%;
+            background: url('https://www.vtion.ai/wp-content/uploads/2022/06/bg01-points01.svg') no-repeat right top;
+            background-size: cover; opacity: 0.05; pointer-events: none;
+        }
+
+        [data-theme="dark"] .stat-card { border-left-color: var(--vtion-teal); }
+        .stat-card:hover { transform: translateY(-3px); }
+        
+        .stat-content { display: flex; justify-content: space-between; align-items: center; }
+        .stat-icon img { width: 45px; height: 45px; opacity: 0.9; }
+        .stat-label { color: var(--text-muted); font-size: 14px; font-weight: 500; }
+        .stat-value { color: var(--text-main); font-size: 28px; font-weight: 700; margin-top: 8px; font-family: 'Gotham', sans-serif; }
+
+        /* --- Table Section --- */
+        .table-container { 
+            background: var(--bg-card); border-radius: 8px; 
+            box-shadow: 0 5px 25px var(--shadow-subtle); 
+            overflow: hidden; transition: background-color 0.3s;
+        }
+        
+        .table-header { padding: 25px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+        .table-header h3 { color: var(--text-main); }
+        
+        table { width: 100%; border-collapse: collapse; }
+        thead { background-color: var(--bg-hover); }
+        
+        th { 
+            text-align: left; padding: 18px 25px; color: var(--text-muted); 
+            font-size: 12px; text-transform: uppercase; font-weight: 600; 
+            letter-spacing: 0.8px; font-family: 'Gotham Medium', sans-serif;
+        }
+        
+        td { 
+            padding: 18px 25px; border-bottom: 1px solid var(--border-color); 
+            color: var(--text-main); font-size: 14px; vertical-align: middle;
+        }
+        
+        tr:last-child td { border-bottom: none; }
+        tr:hover { background-color: var(--bg-hover); }
+        
+        .role-badge { background: rgba(0, 176, 175, 0.1); color: var(--vtion-teal); padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: 600; display: inline-block; }
+        .action-btn { background: none; border: none; cursor: pointer; color: var(--text-muted); transition: 0.2s; margin-left: 10px; font-size: 16px; }
+        .action-btn:hover { color: var(--vtion-teal); }
+        .action-btn.delete:hover { color: var(--danger); }
+
+        /* --- CLIENT CARD GRID --- */
+        .clients-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+        }
+
+        .client-card {
+            background: var(--bg-card);
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 5px 25px var(--shadow-subtle);
+            border: 1px solid var(--border-color);
+            transition: 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            position: relative;
+        }
+
+        .client-card:hover { transform: translateY(-5px); border-color: var(--vtion-teal); }
+        
+        /* LOGO WRAPPER: Always Dark to support white logos */
+        .client-logo-wrapper {
+            height: 90px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            background-color: #0b0e2d; 
+            border-radius: 8px;
+            padding: 15px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        [data-theme="dark"] .client-logo-wrapper {
+            background-color: rgba(255,255,255,0.05); 
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .client-logo {
+            max-height: 100%;
+            max-width: 90%;
+            object-fit: contain;
+        }
+        
+        .client-name { font-size: 16px; font-weight: 700; color: var(--text-main); margin-bottom: 5px; }
+        .client-industry { font-size: 12px; color: var(--text-muted); margin-bottom: 15px; }
+        
+        .client-actions {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            opacity: 0;
+            transition: 0.2s;
+        }
+        .client-card:hover .client-actions { opacity: 1; }
+        
+        /* --- Input Styles --- */
+        #searchInput, #currentCTC, #newCTC, #empName, #empEmail, #empRole, #empCTC, 
+        #clientName, #clientIndustry, #clientLogo, #clientStatus, #clientSearchInput,
+        #appraisalFeedback, #appraisalEmployeeSelect {
+            background-color: var(--bg-input);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+        }
+        
+        /* --- Sections Visibility Logic --- */
+        .content-section { display: none; animation: fadeIn 0.4s ease-out; }
+        .content-section.active-section { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- Appraisal & Other Styles --- */
+        .appraisal-container { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px; }
+        .calculator-card, .result-card { background: var(--bg-card); padding: 35px; border-radius: 8px; box-shadow: 0 5px 25px var(--shadow-subtle); transition: background-color 0.3s; }
+        .result-card { display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; border: 1px dashed var(--border-color); }
+        
+        .market-badge { padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; margin-top: 15px; display: inline-block; }
+        .market-badge.good { background: rgba(46, 204, 113, 0.15); color: var(--success); }
+        .market-badge.bad { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+        .market-badge.avg { background: rgba(241, 196, 15, 0.15); color: #d35400; }
+
+        .input-group { margin-bottom: 25px; }
+        .input-group label { display: block; margin-bottom: 10px; font-weight: 500; color: var(--text-main); font-size: 14px; }
+        .input-group input, .input-group select, .input-group textarea { width: 100%; padding: 12px 15px; border-radius: 5px; font-size: 14px; font-family: 'Gotham', sans-serif; transition: 0.2s; }
+        .input-group input:focus { outline: none; border-color: var(--vtion-teal); }
+
+        /* --- NEW PROJECT CARDS WITH IMAGES --- */
+        .project-card { 
+            background: var(--bg-card); 
+            border-radius: 8px; 
+            margin-bottom: 25px; 
+            border: 1px solid var(--border-color); 
+            display: flex; 
+            overflow: hidden;
+            transition: 0.3s;
+            box-shadow: 0 5px 15px var(--shadow-subtle);
+        }
+        .project-card:hover { border-color: var(--vtion-teal); transform: translateY(-3px); }
+        
+        .project-img-thumb {
+            width: 140px;
+            height: auto;
+            object-fit: cover;
+            min-height: 100%;
+        }
+        
+        .project-content {
+            padding: 25px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .project-icon img { width: 50px; height: 50px; } /* Fallback for generic icons */
+        
+        /* --- SETTINGS: ADMIN CARD WITH BACKGROUND --- */
+        .settings-hero-card { 
+            background: linear-gradient(to right, rgba(11, 14, 45, 0.85), rgba(11, 14, 45, 0.6)), url('https://www.vtion.ai/wp-content/uploads/2022/05/last-section-bg.webp');
+            background-size: cover;
+            background-position: center;
+            padding: 40px; 
+            border-radius: 8px; 
+            margin-bottom: 25px; 
+            box-shadow: 0 5px 25px var(--shadow-subtle); 
+            color: white;
+        }
+        .settings-hero-card h3 { color: white !important; margin-bottom: 20px; }
+        .settings-hero-card .form-group label { color: rgba(255,255,255,0.7); }
+        .settings-hero-card input { 
+            background: rgba(255,255,255,0.1) !important; 
+            border: 1px solid rgba(255,255,255,0.2) !important; 
+            color: white !important; 
+        }
+
+        /* --- ANALYTICS HERO CARD --- */
+        .analytics-card-hero {
+            background: linear-gradient(to right, rgba(11, 14, 45, 0.8), rgba(11, 14, 45, 0.6)), url('https://www.vtion.ai/wp-content/uploads/2022/05/technology-digital-wave-background-copy.webp');
+            background-size: cover;
+            background-position: center;
+            color: white !important;
+            padding: 40px; 
+            border-radius: 8px; 
+            text-align: center; 
+            height: 400px; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+            box-shadow: 0 5px 25px var(--shadow-subtle);
+        }
+        .analytics-card-hero h3, .analytics-card-hero p, .analytics-card-hero i {
+            color: white !important;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* --- Modal --- */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: var(--modal-overlay); justify-content: center; align-items: center; backdrop-filter: blur(4px); }
+        .modal-content { background-color: var(--bg-card); padding: 40px; border-radius: 8px; width: 500px; max-width: 90%; box-shadow: 0 20px 50px rgba(0,0,0,0.3); animation: slideDown 0.3s ease; }
+        @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 1px solid var(--border-color); padding-bottom: 20px; }
+        .modal-header h2 { color: var(--text-main); font-size: 22px; }
+        .close { font-size: 28px; cursor: pointer; color: var(--text-muted); transition: 0.2s; }
+        .close:hover { color: var(--vtion-teal); }
+        
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 500; font-size: 14px; color: var(--text-main); }
+        .form-group input, .form-group select { width: 100%; padding: 12px; border-radius: 5px; font-size: 14px; font-family: 'Gotham', sans-serif; }
+        .form-group input:focus { outline: none; border-color: var(--vtion-teal); }
+        .modal-footer { margin-top: 30px; text-align: right; }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); z-index: 100; }
+            .sidebar.active { transform: translateX(0); }
+            .main-content { margin-left: 0; padding: 20px; }
+            .appraisal-container, .clients-grid { grid-template-columns: 1fr; }
+            .project-card { flex-direction: column; }
+            .project-img-thumb { width: 100%; height: 200px; }
+            .mobile-toggle { display: block; font-size: 24px; cursor: pointer; margin-right: 15px; color: var(--text-main); }
+        }
+        @media (min-width: 769px) { .mobile-toggle { display: none; } }
+    </style>
+</head>
+<body>
+
+    <div id="auth-container">
+        <div class="login-card">
+            <img src="https://www.vtion.ai/wp-content/uploads/2022/05/vtion-logo.svg" alt="VTION" class="login-logo">
+            <div class="login-header">
+                <h2>Welcome Back</h2>
+                <p>Sign in to access the Employee & Client Hub</p>
+            </div>
+            
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <input type="email" id="email" class="login-input" placeholder="Email Address" required>
+                <input type="password" id="password" class="login-input" placeholder="Password" required>
+                
+                <button type="submit" class="btn-login" id="loginBtn">
+                    <span id="btnText">Sign In</span>
+                    <div class="spinner" id="loginSpinner"></div>
+                </button>
+                <div class="error-msg" id="loginError"></div>
+            </form>
+        </div>
+    </div>
+
+    <div id="app-dashboard">
+        <div class="brand-line"></div>
+
+        <div class="sidebar" id="sidebar">
+            <div class="logo-container">
+                <img src="https://www.vtion.ai/wp-content/uploads/2022/05/vtion-white-logo.svg" alt="VTION Logo" class="logo-img">
+            </div>
+            <nav>
+                <div class="nav-item active" onclick="switchTab('employees', this)">
+                    <i class="fas fa-users"></i> Employees
+                </div>
+                <div class="nav-item" onclick="switchTab('clients', this)">
+                    <i class="fas fa-briefcase"></i> Clients
+                </div>
+                <div class="nav-item" onclick="switchTab('appraisals', this)">
+                    <i class="fas fa-hand-holding-usd"></i> Appraisals
+                </div>
+                <div class="nav-item" onclick="switchTab('analytics', this)">
+                    <i class="fas fa-chart-line"></i> Analytics
+                </div>
+                <div class="nav-item" onclick="switchTab('projects', this)">
+                    <i class="fas fa-project-diagram"></i> Projects
+                </div>
+                <div class="nav-item" onclick="switchTab('settings', this)">
+                    <i class="fas fa-cog"></i> Settings
+                </div>
+                
+                <div style="margin-top: auto; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
+                    <div class="nav-item" onclick="toggleTheme()">
+                        <i class="fas fa-moon" id="themeIcon"></i> 
+                        <span id="themeText">Dark Mode</span>
+                    </div>
+                    <div class="nav-item" onclick="handleLogout()" style="color: #ef4444;">
+                        <i class="fas fa-sign-out-alt"></i> 
+                        <span>Logout</span>
+                    </div>
+                </div>
+            </nav>
+        </div>
+
+        <div class="main-content">
+            <div class="header-bar">
+                <div style="display:flex; align-items:center;">
+                    <i class="fas fa-bars mobile-toggle" onclick="toggleSidebar()"></i>
+                    <div class="header-title" id="pageHeader">
+                        <h1>Employee Management</h1>
+                        <p>Real-time Team Data</p>
+                    </div>
+                </div>
+                <button class="btn-primary" id="mainActionBtn" onclick="openEmployeeModal()">
+                    <i class="fas fa-plus"></i> Add Employee
+                </button>
+            </div>
+
+            <div id="employees-section" class="content-section active-section">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-content">
+                            <div>
+                                <div class="stat-label">Total Team Size</div>
+                                <div class="stat-value" id="totalCount">0</div>
+                            </div>
+                            <div class="stat-icon"><img src="https://www.vtion.ai/wp-content/uploads/2022/06/experience-team.svg" alt="Team"></div>
+                        </div>
+                    </div>
+                    <div class="stat-card" style="border-left-color: var(--vtion-teal);">
+                        <div class="stat-content">
+                            <div>
+                                <div class="stat-label">Payroll (Monthly Est.)</div>
+                                <div class="stat-value">₹42.5 L</div>
+                            </div>
+                            <div class="stat-icon"><img src="https://www.vtion.ai/wp-content/uploads/2022/06/media-buying.svg" alt="Finance"></div>
+                        </div>
+                    </div>
+                    <div class="stat-card" style="border-left-color: #E8897B;">
+                        <div class="stat-content">
+                            <div>
+                                <div class="stat-label">Avg. Tenure</div>
+                                <div class="stat-value">3.2 Yrs</div>
+                            </div>
+                            <div class="stat-icon"><img src="https://www.vtion.ai/wp-content/uploads/2022/06/Award-Winning.svg" alt="Tenure"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <div class="table-header">
+                        <h3 style="font-size: 18px;">Core Leadership & Team</h3>
+                        <div style="position: relative;">
+                            <i class="fas fa-search" style="position: absolute; left: 12px; top: 12px; color: #ccc;"></i>
+                            <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="Search..." style="padding: 10px 10px 10px 40px; width: 250px;">
+                        </div>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Designation</th>
+                                <th>Current CTC</th>
+                                <th>Department</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="employeeTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="clients-section" class="content-section">
+                <div class="table-header" style="background:var(--bg-card); border-radius: 8px; margin-bottom: 25px;">
+                    <h3 style="font-size: 18px;">Client Portfolio</h3>
+                    <div style="position: relative;">
+                        <i class="fas fa-search" style="position: absolute; left: 12px; top: 12px; color: #ccc;"></i>
+                        <input type="text" id="clientSearchInput" onkeyup="filterClients()" placeholder="Search Clients..." style="padding: 10px 10px 10px 40px; width: 250px;">
+                    </div>
+                </div>
+                <div class="clients-grid" id="clientsGrid"></div>
+            </div>
+
+            <div id="appraisals-section" class="content-section">
+                <h3 style="margin-bottom: 25px; color: var(--text-main);">Performance Appraisal Calculator</h3>
+                <div class="appraisal-container">
+                    <div class="calculator-card">
+                        <div class="input-group">
+                            <label>Select Employee</label>
+                            <select id="appraisalEmployeeSelect" onchange="autoFillCTC()"><option value="">-- Choose Team Member --</option></select>
+                        </div>
+                        <div class="input-group">
+                            <label>Current CTC (Annual ₹)</label>
+                            <input type="number" id="currentCTC" placeholder="Auto-fills on selection" oninput="calculateHike()">
+                        </div>
+                        <div class="input-group">
+                            <label>Proposed New CTC (Annual ₹)</label>
+                            <input type="number" id="newCTC" placeholder="e.g. 1350000" oninput="calculateHike()">
+                        </div>
+                        <div class="input-group">
+                            <label>Performance Feedback</label>
+                            <textarea id="appraisalFeedback" rows="4" placeholder="Enter key achievements, feedback or justification for hike..."></textarea>
+                        </div>
+                        <button class="btn-primary" onclick="saveAppraisal()" style="width: 100%; justify-content: center;">Save Appraisal Record</button>
+                    </div>
+                    <div class="result-card">
+                        <h4 style="color:var(--text-muted); font-weight: 500;">Calculated Hike</h4>
+                        <div id="hikePercentageDisplay" style="font-size: 56px; font-weight: 700; color: var(--text-main); margin: 25px 0;">0%</div>
+                        <div id="marketComparisonBox" style="display:none;">
+                            <p style="color:var(--text-muted); font-size: 14px;">Market Comparison (2025 Standard: 9.5%)</p>
+                            <span id="marketBadge" class="market-badge">Waiting for data...</span>
+                            <p id="marketText" style="margin-top: 15px; font-size: 13px; color: var(--text-muted); max-width: 80%;">Enter salary details to see how this hike compares to the 2025 Indian market average.</p>
+                        </div>
+                        <div id="emptyResultState" style="color: var(--text-muted);">
+                            <i class="fas fa-calculator" style="font-size: 40px; margin-bottom: 10px;"></i>
+                            <p>Enter Current and New CTC to see results</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <div class="table-header">
+                        <h3 style="font-size: 18px;">Recent Appraisals & Feedback History</h3>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Employee Name</th>
+                                <th>Current CTC</th>
+                                <th>Proposed CTC</th>
+                                <th>Hike %</th>
+                                <th style="width: 35%;">Feedback</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="appraisalTableBody"></tbody>
+                    </table>
+                </div>
+
+            </div>
+
+            <div id="analytics-section" class="content-section">
+                <div class="stats-grid">
+                    <div class="stat-card" style="border-left-color: #7A76B5;">
+                        <div class="stat-content">
+                            <div><div class="stat-label">Data Consumption</div><div class="stat-value">25 Mn Rows/Day</div></div>
+                            <div class="stat-icon"><img src="https://www.vtion.ai/wp-content/uploads/2022/06/Trustworthy-Data.svg" alt="Data"></div>
+                        </div>
+                    </div>
+                    <div class="stat-card" style="border-left-color: #CD2B2F;">
+                        <div class="stat-content">
+                            <div><div class="stat-label">Digital Spends</div><div class="stat-value">80% Covered</div></div>
+                            <div class="stat-icon"><img src="https://www.vtion.ai/wp-content/uploads/2022/06/media-buying.svg" alt="Ads"></div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-content">
+                            <div><div class="stat-label">Android Users</div><div class="stat-value">316 Mn</div></div>
+                            <div class="stat-icon"><img src="https://www.vtion.ai/wp-content/uploads/2022/06/mobiles-icon5.svg" alt="Android"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="analytics-card-hero">
+                    <i class="fas fa-chart-pie" style="font-size: 50px; margin-bottom: 25px;"></i>
+                    <h3>Panel Consumption Analytics</h3>
+                    <p>Visualizations for OTT, Audio, and App usage trends.</p>
+                </div>
+            </div>
+
+            <div id="projects-section" class="content-section">
+                <h3 style="margin-bottom: 25px; color: var(--text-main);">Solutions & Projects</h3>
+                
+                <div class="project-card">
+                    <img src="https://www.vtion.ai/wp-content/uploads/2022/06/consumer-insight-img.jpg" class="project-img-thumb" alt="Agnya">
+                    <div class="project-content">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                            <h4 style="font-size:18px; color:var(--text-main);">Agnya (Consumer Insights)</h4>
+                            <span class="role-badge" style="background: #e0f2fe; color: #0284c7;">SaaS Product</span>
+                        </div>
+                        <p style="color: var(--text-muted); font-size: 14px; line-height:1.5;">AI platform for company culture & psychological productivity. Driving business intel with real-time consumer data.</p>
+                    </div>
+                </div>
+
+                <div class="project-card">
+                    <img src="https://www.vtion.ai/wp-content/uploads/2022/06/audience-activation.jpg" class="project-img-thumb" alt="ZocialOne">
+                    <div class="project-content">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                            <h4 style="font-size:18px; color:var(--text-main);">ZocialOne (Activation)</h4>
+                            <span class="role-badge">Integration</span>
+                        </div>
+                        <p style="color: var(--text-muted); font-size: 14px; line-height:1.5;">Eliminating ad waste and delivering higher ROAS by leveraging remarkably accurate audience sets for DSPs.</p>
+                    </div>
+                </div>
+
+                <div class="project-card">
+                    <div style="width:140px; display:flex; align-items:center; justify-content:center; background:rgba(239,68,68,0.05);"><img src="https://www.vtion.ai/wp-content/uploads/2022/06/Zero-party.svg" style="width:60px; height:60px;"></div>
+                    <div class="project-content">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                            <h4 style="font-size:18px; color:var(--text-main);">Privacy-First Data</h4>
+                            <span class="role-badge" style="background: rgba(239, 68, 68, 0.1); color: var(--danger);">Strategic</span>
+                        </div>
+                        <p style="color: var(--text-muted); font-size: 14px; line-height:1.5;">Preparing infrastructure for post-cookie digital marketing. 100% GDPR compliant and federated learning ready.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="settings-section" class="content-section">
+                <div class="settings-hero-card">
+                    <h3>System Administration</h3>
+                    <div class="form-group">
+                        <label>Admin User</label>
+                        <input type="text" id="adminEmailDisplay" value="Loading..." readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Contact Email</label>
+                        <input type="text" value="grievances@vtion.in">
+                    </div>
+                </div>
+                 <button class="btn-primary" onclick="localStorage.clear(); location.reload();" style="background-color: var(--danger);">
+                    <i class="fas fa-trash"></i> Reset All Data
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="addModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Add New Team Member</h2>
+                <span class="close" onclick="closeModal('addModal')">&times;</span>
+            </div>
+            <form id="addEmployeeForm" onsubmit="saveEmployee(event)">
+                <input type="hidden" id="empId"> 
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="empName" required placeholder="e.g. Riddhish Singh">
+                </div>
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" id="empEmail" required placeholder="name@vtion.in">
+                </div>
+                <div class="form-group">
+                    <label>Current CTC (Annual ₹)</label>
+                    <input type="number" id="empCTC" required placeholder="e.g. 1500000">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div class="form-group">
+                        <label>Designation</label>
+                        <input type="text" id="empRole" required placeholder="e.g. Developer">
+                    </div>
+                    <div class="form-group">
+                        <label>Department</label>
+                        <select id="empDept" required>
+                            <option value="Analytics">Analytics</option>
+                            <option value="Engineering">Engineering</option>
+                            <option value="Marketing">Marketing</option>
+                            <option value="Sales">Sales</option>
+                            <option value="Management">Management</option>
+                            <option value="Product">Product</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" onclick="closeModal('addModal')" style="background:none; border:1px solid var(--border-color); color:var(--text-main); padding: 12px 24px; border-radius: 5px; cursor: pointer; margin-right: 15px; font-weight: 500;">Cancel</button>
+                    <button type="submit" class="btn-primary" style="display:inline-flex;" id="modalSubmitBtn">Save Member</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="clientModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="clientModalTitle">Add New Client</h2>
+                <span class="close" onclick="closeModal('clientModal')">&times;</span>
+            </div>
+            <form id="clientForm" onsubmit="saveClient(event)">
+                <input type="hidden" id="clientId"> 
+                <div class="form-group">
+                    <label>Client Name</label>
+                    <input type="text" id="clientName" required placeholder="e.g. Netflix">
+                </div>
+                <div class="form-group">
+                    <label>Industry</label>
+                    <input type="text" id="clientIndustry" required placeholder="e.g. OTT Platform">
+                </div>
+                <div class="form-group">
+                    <label>Logo URL</label>
+                    <input type="text" id="clientLogo" required placeholder="https://..." value="https://via.placeholder.com/150">
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="clientStatus">
+                        <option value="Active">Active</option>
+                        <option value="Onboarding">Onboarding</option>
+                        <option value="Inactive">Inactive</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" onclick="closeModal('clientModal')" style="background:none; border:1px solid var(--border-color); color:var(--text-main); padding: 12px 24px; border-radius: 5px; cursor: pointer; margin-right: 15px; font-weight: 500;">Cancel</button>
+                    <button type="submit" class="btn-primary" style="display:inline-flex;" id="clientModalBtn">Save Client</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // --- FIREBASE CONFIGURATION ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyDdZjWSU5UnCnywbA1ycyF7jqEVjG9HMnk",
+            authDomain: "vtion-a378f.firebaseapp.com",
+            projectId: "vtion-a378f",
+            storageBucket: "vtion-a378f.firebasestorage.app",
+            messagingSenderId: "748402719504",
+            appId: "1:748402719504:web:0b785006d1e1a5026e0395",
+            measurementId: "G-VC975C949T"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+
+        // --- AUTH LOGIC ---
+        const authContainer = document.getElementById('auth-container');
+        const appDashboard = document.getElementById('app-dashboard');
+        const loginForm = document.getElementById('loginForm');
+        const loginBtn = document.getElementById('loginBtn');
+        const btnText = document.getElementById('btnText');
+        const loginSpinner = document.getElementById('loginSpinner');
+        const loginError = document.getElementById('loginError');
+
+        // Check Auth State Change
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                // User is signed in
+                authContainer.style.display = 'none';
+                appDashboard.style.display = 'flex';
+                document.getElementById('adminEmailDisplay').value = user.email;
+                console.log("User logged in:", user.email);
+            } else {
+                // User is signed out
+                authContainer.style.display = 'flex';
+                appDashboard.style.display = 'none';
+            }
+        });
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            // UI Loading State
+            loginBtn.disabled = true;
+            btnText.style.display = 'none';
+            loginSpinner.style.display = 'inline-block';
+            loginError.style.display = 'none';
+
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+                // Auth state listener will handle redirection
+            } catch (error) {
+                console.error("Login Failed", error);
+                loginError.innerText = "Invalid Email or Password. Please try again.";
+                loginError.style.display = 'block';
+                
+                // Reset UI
+                loginBtn.disabled = false;
+                btnText.style.display = 'inline';
+                loginSpinner.style.display = 'none';
+            }
+        }
+
+        function handleLogout() {
+            auth.signOut().then(() => {
+                console.log("Logged out successfully");
+            }).catch((error) => {
+                console.error("Logout error", error);
+            });
+        }
+
+        // --- APP LOGIC ---
+
+        const defaultEmployees = [
+            { id: 101, name: "Manoj Dawane", email: "manoj.d@vtion.in", role: "Founder & CEO", dept: "Management", ctc: 6000000, status: "Active" },
+            { id: 102, name: "Reshma Doshi", email: "reshma.d@vtion.in", role: "Head – Client Engagement", dept: "Analytics", ctc: 3800000, status: "Active" },
+            { id: 103, name: "Shailesh Varudkar", email: "shailesh.v@vtion.in", role: "Chief Operating Officer", dept: "Management", ctc: 5500000, status: "Active" },
+            { id: 104, name: "Hema Gala", email: "hema.g@vtion.in", role: "Consumer Insights Manager", dept: "Analytics", ctc: 1800000, status: "Active" },
+            { id: 105, name: "Shubham Saxena", email: "shubham.s@vtion.in", role: "Head - Tech & Product", dept: "Engineering", ctc: 4200000, status: "Active" },
+            { id: 111, name: "Aditya Roongta", email: "aditya.r@vtion.in", role: "Client Engagement Lead", dept: "Sales", ctc: 2600000, status: "Active" },
+            { id: 113, name: "Bhumika Pithadia", email: "bhumika.p@vtion.in", role: "Senior Research Analyst", dept: "Analytics", ctc: 1400000, status: "Active" }
+        ];
+
+        const defaultClients = [
+            { id: 1, name: "Omnicom Group", industry: "Media Agency", logo: "https://www.vtion.ai/wp-content/uploads/2022/06/omnicom-logo.png", status: "Active" },
+            { id: 2, name: "Spotify", industry: "Audio Streaming", logo: "https://www.vtion.ai/wp-content/uploads/2022/06/spotify-revise.png", status: "Active" },
+            { id: 3, name: "Airtel", industry: "Telecom", logo: "https://www.vtion.ai/wp-content/uploads/2022/05/layer1.svg", status: "Active" },
+            { id: 4, name: "Tata Group", industry: "Conglomerate", logo: "https://www.vtion.ai/wp-content/uploads/2022/06/Tata_logo25.png", status: "Active" },
+            { id: 5, name: "Tata Play", industry: "OTT & DTH", logo: "https://www.vtion.ai/wp-content/uploads/2022/06/tataplay-1.png", status: "Active" },
+            { id: 6, name: "Amazon", industry: "E-Commerce", logo: "https://www.vtion.ai/wp-content/uploads/2022/06/Amazon_logo.png", status: "Active" },
+            { id: 7, name: "Kotak Mahindra", industry: "BFSI", logo: "https://www.vtion.ai/wp-content/uploads/2022/06/kotak-revise.png", status: "Active" },
+            { id: 8, name: "Kantar", industry: "Market Research", logo: "https://www.vtion.ai/wp-content/uploads/2022/06/kantar-logo.png", status: "Active" },
+            { id: 9, name: "IPG Mediabrands", industry: "Media Agency", logo: "https://www.vtion.ai/wp-content/uploads/2022/06/ipg-mediabrands-vector-logo.png", status: "Active" },
+            { id: 10, name: "Hindustan Unilever", industry: "FMCG", logo: "https://www.vtion.ai/wp-content/uploads/2022/06/hindustan-limited.png", status: "Active" },
+            { id: 11, name: "GroupM", industry: "Media Investment", logo: "https://www.vtion.ai/wp-content/uploads/2022/06/groupm-logo.png", status: "Active" },
+            { id: 12, name: "Glenmark", industry: "Pharmaceuticals", logo: "https://www.vtion.ai/wp-content/uploads/2022/06/Glenmark_logo.png", status: "Active" },
+            { id: 13, name: "Dentsu", industry: "Advertising", logo: "https://www.vtion.ai/wp-content/uploads/2022/06/logo-1.svg", status: "Active" },
+            { id: 14, name: "Reckitt", industry: "FMCG", logo: "https://www.vtion.ai/wp-content/uploads/2025/02/reckitt-logo-home-slider.svg", status: "Active" },
+            { id: 15, name: "Pepsi", industry: "Beverages", logo: "https://www.vtion.ai/wp-content/uploads/2025/02/pepsi-logo-home-slider.svg", status: "Active" },
+            { id: 16, name: "BCG", industry: "Consulting", logo: "https://www.vtion.ai/wp-content/uploads/2025/02/bcg-logo-home-slider.svg", status: "Active" },
+            { id: 17, name: "Colgate", industry: "FMCG", logo: "https://www.vtion.ai/wp-content/uploads/2025/02/colgate-logo-home-slider.svg", status: "Active" },
+            { id: 18, name: "Flipkart", industry: "E-Commerce", logo: "https://www.vtion.ai/wp-content/uploads/2025/02/flipkart-logo-home-slider.svg", status: "Active" },
+            { id: 19, name: "ITC", industry: "FMCG", logo: "https://www.vtion.ai/wp-content/uploads/2025/02/itc-logo-home-slider.svg", status: "Active" },
+            { id: 20, name: "Coca Cola", industry: "Beverages", logo: "https://www.vtion.ai/wp-content/uploads/2025/02/cocacola-logo-home-slider.svg", status: "Active" },
+            { id: 21, name: "Godrej", industry: "Conglomerate", logo: "https://www.vtion.ai/wp-content/uploads/2025/02/godrej-logo-home-slider.svg", status: "Active" },
+            { id: 22, name: "Nivea", industry: "Personal Care", logo: "https://www.vtion.ai/wp-content/uploads/2025/02/nivea-logo-home-slider.svg", status: "Active" },
+            { id: 23, name: "P&G", industry: "FMCG", logo: "https://www.vtion.ai/wp-content/uploads/2025/02/p&g-logo-home-slider.svg", status: "Active" },
+            { id: 24, name: "L'Oreal", industry: "Personal Care", logo: "https://www.vtion.ai/wp-content/uploads/2025/02/loreal-logo-home-slider.svg", status: "Active" },
+            { id: 25, name: "Publicis Groupe", industry: "Advertising", logo: "https://www.vtion.ai/wp-content/uploads/2025/02/publicis-groupe-logo-home-slider.svg", status: "Active" }
+        ];
+
+        let employees = JSON.parse(localStorage.getItem('vtion_employees')) || defaultEmployees;
+        let clients = JSON.parse(localStorage.getItem('vtion_clients')) || defaultClients;
+        let appraisals = JSON.parse(localStorage.getItem('vtion_appraisals')) || [];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderTable();
+            renderClients();
+            renderAppraisals();
+            populateAppraisalDropdown();
+            initTheme();
+        });
+
+        // --- THEME LOGIC ---
+        function initTheme() {
+            if(localStorage.getItem('vtion_theme') === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                updateThemeIcon(true);
+            }
+        }
+
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme');
+            if(current === 'dark') {
+                document.documentElement.removeAttribute('data-theme');
+                localStorage.setItem('vtion_theme', 'light');
+                updateThemeIcon(false);
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('vtion_theme', 'dark');
+                updateThemeIcon(true);
+            }
+        }
+
+        function updateThemeIcon(isDark) {
+            document.getElementById('themeIcon').className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+            document.getElementById('themeText').innerText = isDark ? 'Light Mode' : 'Dark Mode';
+        }
+
+        // --- NAVIGATION ---
+        function switchTab(tabName, navElement) {
+            document.querySelectorAll('.content-section').forEach(el => el.classList.remove('active-section'));
+            document.querySelectorAll('.nav-item').forEach(el => {
+                if(!el.onclick.toString().includes('toggleTheme') && !el.onclick.toString().includes('handleLogout')) el.classList.remove('active');
+            });
+            document.getElementById(tabName + '-section').classList.add('active-section');
+            navElement.classList.add('active');
+
+            const headerTitle = document.querySelector('#pageHeader h1');
+            const headerDesc = document.querySelector('#pageHeader p');
+            const mainBtn = document.getElementById('mainActionBtn');
+
+            // Reset Button
+            mainBtn.style.display = 'none';
+
+            if (tabName === 'employees') {
+                headerTitle.innerText = "Employee Management"; headerDesc.innerText = "Real-time Team Data";
+                mainBtn.style.display = 'flex'; mainBtn.innerHTML = '<i class="fas fa-plus"></i> Add Employee'; mainBtn.onclick = openEmployeeModal;
+            } else if (tabName === 'clients') {
+                headerTitle.innerText = "Client Portfolio"; headerDesc.innerText = "Manage active client relationships";
+                mainBtn.style.display = 'flex'; mainBtn.innerHTML = '<i class="fas fa-plus"></i> Add Client'; mainBtn.onclick = openClientModal;
+            } else if (tabName === 'appraisals') {
+                headerTitle.innerText = "Performance Appraisals"; headerDesc.innerText = "Evaluate salary increments";
+            } else if (tabName === 'analytics') {
+                headerTitle.innerText = "Analytics Overview"; headerDesc.innerText = "Panel Consumption & Metrics";
+            } else if (tabName === 'projects') {
+                headerTitle.innerText = "Project Status"; headerDesc.innerText = "SaaS Products & Integrations";
+            } else if (tabName === 'settings') {
+                headerTitle.innerText = "System Settings"; headerDesc.innerText = "Configure platform preferences";
+            }
+        }
+
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); }
+
+        // --- EMPLOYEES CRUD ---
+        function openEmployeeModal(id) {
+            document.getElementById('addModal').style.display = 'flex';
+            if (typeof id === 'number') {
+                // Edit Mode
+                const emp = employees.find(e => e.id === id);
+                document.getElementById('empId').value = emp.id;
+                document.getElementById('empName').value = emp.name;
+                document.getElementById('empEmail').value = emp.email;
+                document.getElementById('empCTC').value = emp.ctc;
+                document.getElementById('empRole').value = emp.role;
+                document.getElementById('empDept').value = emp.dept;
+                document.getElementById('modalTitle').innerText = "Edit Team Member";
+                document.getElementById('modalSubmitBtn').innerText = "Update Member";
+            } else {
+                // Add Mode
+                document.getElementById('addEmployeeForm').reset();
+                document.getElementById('empId').value = "";
+                document.getElementById('modalTitle').innerText = "Add New Team Member";
+                document.getElementById('modalSubmitBtn').innerText = "Save Member";
+            }
+        }
+
+        function saveEmployee(e) {
+            e.preventDefault();
+            const id = document.getElementById('empId').value;
+            const data = {
+                id: id ? parseInt(id) : Date.now(),
+                name: document.getElementById('empName').value,
+                email: document.getElementById('empEmail').value,
+                role: document.getElementById('empRole').value,
+                dept: document.getElementById('empDept').value,
+                ctc: parseFloat(document.getElementById('empCTC').value) || 0,
+                status: "Active"
+            };
+
+            if (id) {
+                const idx = employees.findIndex(emp => emp.id == id);
+                if (idx !== -1) employees[idx] = data;
+            } else {
+                employees.push(data);
+            }
+            localStorage.setItem('vtion_employees', JSON.stringify(employees));
+            renderTable();
+            populateAppraisalDropdown();
+            closeModal('addModal');
+        }
+
+        function deleteEmployee(id) {
+            if (confirm('Delete this employee?')) {
+                employees = employees.filter(emp => emp.id !== id);
+                localStorage.setItem('vtion_employees', JSON.stringify(employees));
+                renderTable();
+                populateAppraisalDropdown();
+            }
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('employeeTableBody');
+            document.getElementById('totalCount').innerText = employees.length;
+            tbody.innerHTML = '';
+            
+            // Search Filter
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = employees.filter(e => e.name.toLowerCase().includes(query) || e.role.toLowerCase().includes(query));
+
+            filtered.forEach(emp => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><div style="font-weight: 600;">${emp.name}</div></td>
+                    <td>${emp.email}</td>
+                    <td><span class="role-badge">${emp.role}</span></td>
+                    <td style="font-weight:600;">₹${(emp.ctc || 0).toLocaleString('en-IN')}</td>
+                    <td>${emp.dept}</td>
+                    <td>
+                        <button class="action-btn" onclick="openEmployeeModal(${emp.id})"><i class="fas fa-edit"></i></button>
+                        <button class="action-btn delete" onclick="deleteEmployee(${emp.id})"><i class="fas fa-trash"></i></button>
+                    </td>`;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // --- CLIENTS CRUD ---
+        function renderClients() {
+            const grid = document.getElementById('clientsGrid');
+            const query = document.getElementById('clientSearchInput').value.toLowerCase();
+            grid.innerHTML = '';
+            
+            const filtered = clients.filter(c => c.name.toLowerCase().includes(query) || c.industry.toLowerCase().includes(query));
+
+            filtered.forEach(client => {
+                const card = document.createElement('div');
+                card.className = 'client-card';
+                card.innerHTML = `
+                    <div class="client-actions">
+                        <button class="action-btn" onclick="openClientModal(${client.id})"><i class="fas fa-edit"></i></button>
+                        <button class="action-btn delete" onclick="deleteClient(${client.id})"><i class="fas fa-trash"></i></button>
+                    </div>
+                    <div class="client-logo-wrapper">
+                        <img src="${client.logo}" alt="${client.name}" class="client-logo" onerror="this.src='https://via.placeholder.com/150?text=${client.name.charAt(0)}'">
+                    </div>
+                    <div class="client-name">${client.name}</div>
+                    <div class="client-industry">${client.industry}</div>
+                    <span class="role-badge" style="background:${client.status==='Active'?'rgba(46, 204, 113, 0.1)':'#eee'}; color:${client.status==='Active'?'var(--success)':'#777'}">${client.status}</span>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function filterClients() { renderClients(); }
+
+        function openClientModal(id) {
+            document.getElementById('clientModal').style.display = 'flex';
+            if (typeof id === 'number') {
+                const client = clients.find(c => c.id === id);
+                document.getElementById('clientId').value = client.id;
+                document.getElementById('clientName').value = client.name;
+                document.getElementById('clientIndustry').value = client.industry;
+                document.getElementById('clientLogo').value = client.logo;
+                document.getElementById('clientStatus').value = client.status;
+                document.getElementById('clientModalTitle').innerText = "Edit Client";
+                document.getElementById('clientModalBtn').innerText = "Update Client";
+            } else {
+                document.getElementById('clientForm').reset();
+                document.getElementById('clientId').value = "";
+                document.getElementById('clientModalTitle').innerText = "Add New Client";
+                document.getElementById('clientModalBtn').innerText = "Save Client";
+            }
+        }
+
+        function saveClient(e) {
+            e.preventDefault();
+            const id = document.getElementById('clientId').value;
+            const data = {
+                id: id ? parseInt(id) : Date.now(),
+                name: document.getElementById('clientName').value,
+                industry: document.getElementById('clientIndustry').value,
+                logo: document.getElementById('clientLogo').value,
+                status: document.getElementById('clientStatus').value
+            };
+
+            if (id) {
+                const idx = clients.findIndex(c => c.id == id);
+                if (idx !== -1) clients[idx] = data;
+            } else {
+                clients.push(data);
+            }
+            localStorage.setItem('vtion_clients', JSON.stringify(clients));
+            renderClients();
+            closeModal('clientModal');
+        }
+
+        function deleteClient(id) {
+            if (confirm('Delete this client?')) {
+                clients = clients.filter(c => c.id !== id);
+                localStorage.setItem('vtion_clients', JSON.stringify(clients));
+                renderClients();
+            }
+        }
+
+        // --- SHARED UTILS ---
+        function closeModal(modalId) { document.getElementById(modalId).style.display = 'none'; }
+        
+        function filterTable() { renderTable(); } // Wrapper for input listener
+
+        // Appraisal Logic
+        function populateAppraisalDropdown() {
+            const select = document.getElementById('appraisalEmployeeSelect');
+            select.innerHTML = '<option value="">-- Choose Team Member --</option>';
+            employees.forEach(emp => {
+                const option = document.createElement('option');
+                option.value = emp.id;
+                option.text = `${emp.name} (${emp.dept})`;
+                select.appendChild(option);
+            });
+        }
+        
+        function autoFillCTC() {
+            const id = parseInt(document.getElementById('appraisalEmployeeSelect').value);
+            const emp = employees.find(e => e.id === id);
+            if(emp) { document.getElementById('currentCTC').value = emp.ctc; calculateHike(); }
+        }
+
+        function calculateHike() {
+            const cur = parseFloat(document.getElementById('currentCTC').value);
+            const next = parseFloat(document.getElementById('newCTC').value);
+            if(cur && next) {
+                const hike = ((next-cur)/cur)*100;
+                document.getElementById('hikePercentageDisplay').innerText = hike.toFixed(1) + "%";
+                document.getElementById('emptyResultState').style.display = 'none';
+                document.getElementById('marketComparisonBox').style.display = 'block';
+                
+                const badge = document.getElementById('marketBadge');
+                if(hike < 6) { badge.className='market-badge bad'; badge.innerText="Below Market"; }
+                else if(hike <= 12) { badge.className='market-badge good'; badge.innerText="Market Standard"; }
+                else { badge.className='market-badge avg'; badge.innerText="Top Retention"; }
+                return hike;
+            }
+            return 0;
+        }
+
+        // --- NEW APPRAISAL STORAGE LOGIC ---
+        function saveAppraisal() {
+            const select = document.getElementById('appraisalEmployeeSelect');
+            const empName = select.options[select.selectedIndex].text;
+            const empId = select.value;
+            const currentCTC = parseFloat(document.getElementById('currentCTC').value);
+            const newCTC = parseFloat(document.getElementById('newCTC').value);
+            const feedback = document.getElementById('appraisalFeedback').value;
+            const hike = calculateHike();
+
+            if (!empId || !currentCTC || !newCTC) {
+                alert("Please select an employee and fill all CTC fields.");
+                return;
+            }
+
+            const newRecord = {
+                id: Date.now(),
+                empName: empName,
+                currentCTC: currentCTC,
+                newCTC: newCTC,
+                hike: hike.toFixed(1),
+                feedback: feedback || "No feedback provided."
+            };
+
+            appraisals.unshift(newRecord); // Add to top
+            localStorage.setItem('vtion_appraisals', JSON.stringify(appraisals));
+            
+            renderAppraisals();
+            
+            // Clear inputs
+            document.getElementById('newCTC').value = '';
+            document.getElementById('appraisalFeedback').value = '';
+            alert('Appraisal Saved Successfully!');
+        }
+
+        function deleteAppraisal(id) {
+            if(confirm('Remove this appraisal record?')) {
+                appraisals = appraisals.filter(a => a.id !== id);
+                localStorage.setItem('vtion_appraisals', JSON.stringify(appraisals));
+                renderAppraisals();
+            }
+        }
+
+        function renderAppraisals() {
+            const tbody = document.getElementById('appraisalTableBody');
+            tbody.innerHTML = '';
+
+            appraisals.forEach(record => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="font-weight: 600;">${record.empName}</td>
+                    <td>₹${record.currentCTC.toLocaleString('en-IN')}</td>
+                    <td style="font-weight: 600; color: var(--vtion-teal);">₹${record.newCTC.toLocaleString('en-IN')}</td>
+                    <td><span class="role-badge" style="background: rgba(0,0,0,0.05); color: var(--text-main);">${record.hike}%</span></td>
+                    <td style="font-size: 13px; color: var(--text-muted); font-style: italic;">"${record.feedback}"</td>
+                    <td>
+                        <button class="action-btn delete" onclick="deleteAppraisal(${record.id})"><i class="fas fa-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            if (appraisals.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color: var(--text-muted);">No appraisal records found. Calculate and save one above.</td></tr>';
+            }
+        }
+        
+        window.onclick = function(e) {
+            if (e.target.classList.contains('modal')) e.target.style.display = 'none';
+        }
+    </script>
+</body>
+</html>
