@@ -923,13 +923,38 @@
         // --- APP LOGIC ---
 
         const defaultEmployees = [
-            { id: 101, name: "Manoj Dawane", email: "manoj.d@vtion.in", role: "Founder & CEO", dept: "Management", ctc: 6000000, status: "Active" },
+            { id: 101, name: "Manoj Dawane", email: "manoj.d@vtion.in", role: "Founder & CEO", dept: "Management", ctc: 10000000, status: "Active" },
             { id: 102, name: "Reshma Doshi", email: "reshma.d@vtion.in", role: "Head – Client Engagement", dept: "Analytics", ctc: 3800000, status: "Active" },
             { id: 103, name: "Shailesh Varudkar", email: "shailesh.v@vtion.in", role: "Chief Operating Officer", dept: "Management", ctc: 5500000, status: "Active" },
             { id: 104, name: "Hema Gala", email: "hema.g@vtion.in", role: "Consumer Insights Manager", dept: "Analytics", ctc: 1800000, status: "Active" },
             { id: 105, name: "Shubham Saxena", email: "shubham.s@vtion.in", role: "Head - Tech & Product", dept: "Engineering", ctc: 4200000, status: "Active" },
+            { id: 106, name: "Aditya Choudhary", email: "aditya.c@vtion.in", role: "Chief Of Staff", dept: "Management", ctc: 3200000, status: "Active" },
+            { id: 107, name: "Aanya Aggarwal", email: "aanya.a@vtion.in", role: "Lead - Product Marketing", dept: "Marketing", ctc: 2400000, status: "Active" },
+            { id: 108, name: "Piyush Gupta", email: "piyush.g@vtion.in", role: "Head Product Marketing", dept: "Marketing", ctc: 3500000, status: "Active" },
+            { id: 109, name: "Abhinav Lalam", email: "abhinav.l@vtion.in", role: "Head - Data Science", dept: "Analytics", ctc: 4000000, status: "Active" },
+            { id: 110, name: "Yashali Navalkar", email: "yashali.n@vtion.in", role: "Manager – Analytics", dept: "Analytics", ctc: 1900000, status: "Active" },
             { id: 111, name: "Aditya Roongta", email: "aditya.r@vtion.in", role: "Client Engagement Lead", dept: "Sales", ctc: 2600000, status: "Active" },
-            { id: 113, name: "Bhumika Pithadia", email: "bhumika.p@vtion.in", role: "Senior Research Analyst", dept: "Analytics", ctc: 1400000, status: "Active" }
+            { id: 112, name: "Anurag Chaturvedi", email: "anurag.c@vtion.in", role: "Client Engagement Lead", dept: "Sales", ctc: 2600000, status: "Active" },
+            { id: 113, name: "Bhumika Pithadia", email: "bhumika.p@vtion.in", role: "Senior Research Analyst", dept: "Analytics", ctc: 1400000, status: "Active" },
+            { id: 114, name: "Swapnil Shetty", email: "swapnil.s@vtion.in", role: "Sales Lead – Audience", dept: "Sales", ctc: 2800000, status: "Active" },
+            { id: 115, name: "Bipin Koli", email: "bipin.k@vtion.in", role: "Technology Manager", dept: "Engineering", ctc: 2200000, status: "Active" },
+            { id: 116, name: "Priyanka Yadav", email: "priyanka.y@vtion.in", role: "Android Developer", dept: "Engineering", ctc: 1200000, status: "Active" },
+            { id: 117, name: "Saurabh Singh", email: "saurabh.s@vtion.in", role: "Sales Lead - North", dept: "Sales", ctc: 2500000, status: "Active" },
+            { id: 118, name: "Prajakta Joshi", email: "prajakta.j@vtion.in", role: "Manager- Brand Growth", dept: "Marketing", ctc: 1800000, status: "Active" },
+            { id: 119, name: "Mahesh Kadam", email: "mahesh.k@vtion.in", role: "Data Analyst", dept: "Analytics", ctc: 900000, status: "Active" },
+            { id: 120, name: "Ripula Gulati", email: "ripula.g@vtion.in", role: "Analyst - Quality", dept: "Analytics", ctc: 850000, status: "Active" },
+            { id: 121, name: "Sanjay Natra", email: "sanjay.n@vtion.in", role: "Tech Program Manager", dept: "Engineering", ctc: 2100000, status: "Active" },
+            { id: 122, name: "Mahesh Marapalli", email: "mahesh.m@vtion.in", role: "Lead Engineer - Android", dept: "Engineering", ctc: 2800000, status: "Active" },
+            { id: 123, name: "Devanshi Choudhary", email: "devanshi.c@vtion.in", role: "Executive - Panel", dept: "Management", ctc: 600000, status: "Active" },
+            { id: 124, name: "Kamal Thakur", email: "kamal.t@vtion.in", role: "Software Developer", dept: "Engineering", ctc: 1100000, status: "Active" },
+            { id: 125, name: "Ankit Jain", email: "ankit.j@vtion.in", role: "Android Developer", dept: "Engineering", ctc: 1100000, status: "Active" },
+            { id: 126, name: "Shivam Awasthi", email: "shivam.a@vtion.in", role: "Data Scientist (ML)", dept: "Analytics", ctc: 1600000, status: "Active" },
+            { id: 127, name: "Pulkit Bhardwaj", email: "pulkit.b@vtion.in", role: "Power BI Developer", dept: "Analytics", ctc: 1300000, status: "Active" },
+            { id: 128, name: "Utsav Kumar", email: "utsav.k@vtion.in", role: "Android Developer", dept: "Engineering", ctc: 1000000, status: "Active" },
+            { id: 129, name: "Divya Bansal", email: "divya.b@vtion.in", role: "Digital Marketer", dept: "Marketing", ctc: 900000, status: "Active" },
+            { id: 130, name: "Vishal Singh", email: "vishal.s@vtion.in", role: "Developer", dept: "Engineering", ctc: 950000, status: "Active" },
+            { id: 131, name: "Indrajeet Jyoti", email: "indrajeet.j@vtion.in", role: "Android Developer", dept: "Engineering", ctc: 1000000, status: "Active" },
+            { id: 132, name: "Abhishek Mohite", email: "abhishek.m@vtion.in", role: "Developer (Backend)", dept: "Engineering", ctc: 1200000, status: "Active" }
         ];
 
         const defaultClients = [
